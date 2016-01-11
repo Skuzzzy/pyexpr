@@ -20,7 +20,10 @@ class Constant_Expression(object):
         return Constant_Expression(self.value)
 
     def evaluate(self, values={}):
-        return self.value
+        return self.bind(values)
+
+    def derive(self, respect_to):
+        return Constant_Expression(0)
 
     def __str__(self):
         return str(self.value)
@@ -38,7 +41,13 @@ class Variable_Expression():
             return Variable_Expression(self.variable)
 
     def evaluate(self, values={}):
-        return self.bind(values)
+        return self.bind(values) # TODO Circular evaluation when bind creates variables
+
+    def derive(self, respect_to):
+        if self.variable == respect_to:
+            return Constant_Expression(1)
+        else:
+            return Constant_Expression(0)
 
     def __str__(self):
         return str(self.variable)
@@ -55,11 +64,21 @@ class Addition_Expression():
 
     def evaluate(self, values={}):
         intermediate = self.bind(values)
+        intermediate = Addition_Expression(
+                            intermediate.lhs.evaluate(),
+                            intermediate.rhs.evaluate()
+                        )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value + intermediate.rhs.value)
         # Otherwise
         return intermediate
+
+    def derive(self, respect_to):
+        return Addition_Expression(
+                    self.lhs.derive(respect_to),
+                    self.rhs.derive(respect_to)
+                )
 
     def __str__(self):
         return "({0} + {1})".format(self.lhs, self.rhs)
@@ -76,11 +95,21 @@ class Subtraction_Expression():
 
     def evaluate(self, values={}):
         intermediate = self.bind(values)
+        intermediate = Subtraction_Expression(
+                            intermediate.lhs.evaluate(),
+                            intermediate.rhs.evaluate()
+                        )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value - intermediate.rhs.value)
         # Otherwise
         return intermediate
+
+    def derive(self, respect_to):
+        return Subtraction_Expression(
+                    self.lhs.derive(respect_to),
+                    self.rhs.derive(respect_to)
+                )
 
     def __str__(self):
         return "({0} - {1})".format(self.lhs, self.rhs)
@@ -97,11 +126,27 @@ class Multiplication_Expression():
 
     def evaluate(self, values={}):
         intermediate = self.bind(values)
+        intermediate = Multiplication_Expression(
+                            intermediate.lhs.evaluate(),
+                            intermediate.rhs.evaluate()
+                        )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value * intermediate.rhs.value)
         # Otherwise
         return intermediate
+
+    def derive(self, respect_to):
+        return Addition_Expression(
+                    Multiplication_Expression(
+                        self.lhs.derive(respect_to),
+                        self.rhs
+                    ),
+                    Multiplication_Expression(
+                        self.lhs,
+                        self.rhs.derive(respect_to)
+                    )
+                )
 
     def __str__(self):
         return "({0} * {1})".format(self.lhs, self.rhs)
@@ -118,11 +163,33 @@ class Division_Expression():
 
     def evaluate(self, values={}):
         intermediate = self.bind(values)
+        intermediate = Division_Expression(
+                            intermediate.lhs.evaluate(),
+                            intermediate.rhs.evaluate()
+                        )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value / intermediate.rhs.value)
         # Otherwise
         return intermediate
+
+    def derive(self, respect_to):
+        return Division_Expression(
+                    Subtraction_Expression(
+                        Multiplication_Expression(
+                            self.lhs.derive(respect_to),
+                            self.rhs
+                        ),
+                        Multiplication_Expression(
+                            self.lhs,
+                            self.rhs.derive(respect_to)
+                        )
+                    ),
+                    Exponent_Expression(
+                        self.rhs,
+                        Constant_Expression(2)
+                    )
+                )
 
     def __str__(self):
         return "({0} / {1})".format(self.lhs, self.rhs)
@@ -139,11 +206,19 @@ class Exponent_Expression():
 
     def evaluate(self, values={}):
         intermediate = self.bind(values)
+        intermediate = Exponent_Expression(
+                            intermediate.lhs.evaluate(),
+                            intermediate.rhs.evaluate()
+                        )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(pow(intermediate.lhs.value, intermediate.rhs.value))
         # Otherwise
         return intermediate
+
+    def derive(self, respect_to):
+        # TODO
+        raise Exception('Not Implemented')
 
     def __str__(self):
         return "({0}^{1})".format(self.lhs, self.rhs)
