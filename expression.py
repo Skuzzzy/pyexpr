@@ -75,7 +75,7 @@ class Addition_Expression(object):
         elif (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0):
                 return intermediate.lhs
         elif (isinstance(intermediate.lhs, Constant_Expression) and
-            isinstance(intermediate.rhs, Constant_Expression)):
+              isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value + intermediate.rhs.value)
         # Otherwise
         return intermediate
@@ -145,7 +145,7 @@ class Multiplication_Expression(object):
         elif (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 1):
                 return intermediate.lhs
         elif ((isinstance(intermediate.lhs, Constant_Expression) and intermediate.lhs.value == 0) or
-            (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0)):
+              (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0)):
                 return Constant_Expression(0)
         elif (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
