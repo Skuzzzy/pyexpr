@@ -28,7 +28,7 @@ class Constant_Expression(object):
     def __str__(self):
         return str(self.value)
 
-class Variable_Expression():
+class Variable_Expression(object):
     def __init__(self, variable_name):
         self.variable = variable_name
 
@@ -52,7 +52,7 @@ class Variable_Expression():
     def __str__(self):
         return str(self.variable)
 
-class Addition_Expression():
+class Addition_Expression(object):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -65,10 +65,16 @@ class Addition_Expression():
     def evaluate(self, values={}):
         intermediate = self.bind(values)
         intermediate = Addition_Expression(
-                            intermediate.lhs.evaluate(),
-                            intermediate.rhs.evaluate()
+                            intermediate.lhs.evaluate(values),
+                            intermediate.rhs.evaluate(values)
                         )
-        if (isinstance(intermediate.lhs, Constant_Expression) and
+        # TODO Is there a better way
+        # TODO Ordered list of constraints of conditions and transformations applied on said conditions
+        if (isinstance(intermediate.lhs, Constant_Expression) and intermediate.lhs.value == 0):
+                return intermediate.rhs
+        elif (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0):
+                return intermediate.lhs
+        elif (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value + intermediate.rhs.value)
         # Otherwise
@@ -83,7 +89,7 @@ class Addition_Expression():
     def __str__(self):
         return "({0} + {1})".format(self.lhs, self.rhs)
 
-class Subtraction_Expression():
+class Subtraction_Expression(object):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -96,11 +102,14 @@ class Subtraction_Expression():
     def evaluate(self, values={}):
         intermediate = self.bind(values)
         intermediate = Subtraction_Expression(
-                            intermediate.lhs.evaluate(),
-                            intermediate.rhs.evaluate()
+                            intermediate.lhs.evaluate(values),
+                            intermediate.rhs.evaluate(values)
                         )
-        if (isinstance(intermediate.lhs, Constant_Expression) and
-            isinstance(intermediate.rhs, Constant_Expression)):
+        # TODO Is there really not a better way of doing this
+        if (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0):
+                return intermediate.lhs
+        elif (isinstance(intermediate.lhs, Constant_Expression) and
+              isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value - intermediate.rhs.value)
         # Otherwise
         return intermediate
@@ -114,7 +123,7 @@ class Subtraction_Expression():
     def __str__(self):
         return "({0} - {1})".format(self.lhs, self.rhs)
 
-class Multiplication_Expression():
+class Multiplication_Expression(object):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -127,10 +136,18 @@ class Multiplication_Expression():
     def evaluate(self, values={}):
         intermediate = self.bind(values)
         intermediate = Multiplication_Expression(
-                            intermediate.lhs.evaluate(),
-                            intermediate.rhs.evaluate()
+                            intermediate.lhs.evaluate(values),
+                            intermediate.rhs.evaluate(values)
                         )
-        if (isinstance(intermediate.lhs, Constant_Expression) and
+        # TODO Is there really not a better way of doing this
+        if (isinstance(intermediate.lhs, Constant_Expression) and intermediate.lhs.value == 1):
+                return intermediate.rhs
+        elif (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 1):
+                return intermediate.lhs
+        elif ((isinstance(intermediate.lhs, Constant_Expression) and intermediate.lhs.value == 0) or
+            (isinstance(intermediate.rhs, Constant_Expression) and intermediate.rhs.value == 0)):
+                return Constant_Expression(0)
+        elif (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
                 return Constant_Expression(intermediate.lhs.value * intermediate.rhs.value)
         # Otherwise
@@ -151,7 +168,7 @@ class Multiplication_Expression():
     def __str__(self):
         return "({0} * {1})".format(self.lhs, self.rhs)
 
-class Division_Expression():
+class Division_Expression(object):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -164,8 +181,8 @@ class Division_Expression():
     def evaluate(self, values={}):
         intermediate = self.bind(values)
         intermediate = Division_Expression(
-                            intermediate.lhs.evaluate(),
-                            intermediate.rhs.evaluate()
+                            intermediate.lhs.evaluate(values),
+                            intermediate.rhs.evaluate(values)
                         )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
@@ -194,7 +211,7 @@ class Division_Expression():
     def __str__(self):
         return "({0} / {1})".format(self.lhs, self.rhs)
 
-class Exponent_Expression():
+class Exponent_Expression(object):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -207,8 +224,8 @@ class Exponent_Expression():
     def evaluate(self, values={}):
         intermediate = self.bind(values)
         intermediate = Exponent_Expression(
-                            intermediate.lhs.evaluate(),
-                            intermediate.rhs.evaluate()
+                            intermediate.lhs.evaluate(values),
+                            intermediate.rhs.evaluate(values)
                         )
         if (isinstance(intermediate.lhs, Constant_Expression) and
             isinstance(intermediate.rhs, Constant_Expression)):
